@@ -19,14 +19,14 @@ export type CourseSummary = {
 
 export function CourseCard({ course }: { course: CourseSummary }) {
   return (
-    <article className="group card-lux flex flex-col overflow-hidden rounded-2xl hover:card-lux-hover">
+    <article className="group card-lux flex animate-fade-up flex-col overflow-hidden rounded-2xl hover:card-lux-hover">
       <div className="relative aspect-video overflow-hidden bg-brand">
         {course.thumbnail_url ? (
           <img
             src={course.thumbnail_url}
             alt={course.title}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -55,7 +55,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
             </span>
           )}
         </div>
-        <h3 className="text-lg font-semibold leading-snug text-foreground">{course.title}</h3>
+        <h3 className="text-lg font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">{course.title}</h3>
         {course.short_description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{course.short_description}</p>
         )}
