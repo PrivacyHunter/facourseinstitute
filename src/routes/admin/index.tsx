@@ -14,6 +14,7 @@ import {
   Pencil,
   Plus,
   Radio,
+  ShieldCheck,
   Trash2,
   Users,
   UserRoundSearch,
