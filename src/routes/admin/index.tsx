@@ -14,6 +14,7 @@ import {
   Pencil,
   Plus,
   Radio,
+  ShieldCheck,
   Trash2,
   Users,
   UserRoundSearch,
@@ -38,7 +39,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { decideEnrollment, listAdminStudents } from "@/lib/admin-actions.functions";
-import { claimFirstAdmin, adminExists } from "@/lib/admin.functions";
+import { listAdmins, addAdmin, removeAdmin } from "@/lib/admins.functions";
 import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 import { SITE, formatPrice, statusLabel } from "@/lib/site";
 
@@ -68,11 +69,7 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, "");
 
 function AdminPage() {
-  const { user, isAdmin, loading, refreshRole } = useAuth();
-  const claim = useServerFn(claimFirstAdmin);
-  const exists = useServerFn(adminExists);
-  const [claiming, setClaiming] = useState(false);
-  const { data: hasAdmin } = useQuery({ queryKey: ["admin-exists"], queryFn: () => exists() });
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -86,8 +83,8 @@ function AdminPage() {
     return (
       <Layout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-3xl">Admin access</h1>
-          <p className="mt-2 text-muted-foreground">Sign in with your admin account.</p>
+          <h1 className="font-display text-3xl">Restricted area</h1>
+          <p className="mt-2 text-muted-foreground">Sign in with an authorised admin account to continue.</p>
           <Button asChild className="mt-6">
             <Link to="/auth">Sign in</Link>
           </Button>
@@ -100,18 +97,18 @@ function AdminPage() {
     return (
       <Layout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-3xl">Not an admin</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This area is protected by account sign-in and the server-verified admin role.</p>
-          {!hasAdmin?.exists && <Button className="mt-6" disabled={claiming} onClick={async () => {
-            setClaiming(true);
-            try { const result = await claim(); toast[result.ok ? "success" : "error"](result.reason); await refreshRole(); }
-            catch (error) { toast.error(error instanceof Error ? error.message : "Could not activate admin"); }
-            finally { setClaiming(false); }
-          }}>{claiming && <Loader2 className="h-4 w-4 animate-spin" />} Activate first admin</Button>}
+          <h1 className="font-display text-3xl">Page not available</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your account does not have admin permissions. Contact the site owner if you believe this is a mistake.
+          </p>
+          <Button asChild variant="outline" className="mt-6">
+            <Link to="/">Back to home</Link>
+          </Button>
         </div>
       </Layout>
     );
   }
+
 
   return (
     <Layout>
@@ -152,6 +149,7 @@ function AdminPage() {
             <TabsTrigger value="coupons"><TicketPercent className="h-4 w-4" /> Coupons</TabsTrigger>
             <TabsTrigger value="students"><UserRoundSearch className="h-4 w-4" /> Students</TabsTrigger>
             <TabsTrigger value="audit"><Activity className="h-4 w-4" /> Audit log</TabsTrigger>
+            <TabsTrigger value="admins"><ShieldCheck className="h-4 w-4" /> Admins</TabsTrigger>
           </TabsList>
 
           <TabsContent value="enrollments" className="mt-6">
@@ -175,6 +173,7 @@ function AdminPage() {
           <TabsContent value="coupons" className="mt-6"><CouponsTab /></TabsContent>
           <TabsContent value="students" className="mt-6"><StudentsTab /></TabsContent>
           <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
+          <TabsContent value="admins" className="mt-6"><AdminsTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -1398,4 +1397,90 @@ function AuditTab() {
   const { data } = useQuery({ queryKey: ["admin-audit"], queryFn: async () => (await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200)).data ?? [] });
   useRealtimeQueries(["audit_logs"], [["admin-audit"]]);
   return <div className="space-y-2">{data?.map((log) => <div key={log.id} className="rounded-lg border border-border bg-card px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium capitalize">{log.action} · {log.entity_type}</p><time className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</time></div><p className="mt-1 font-mono text-xs text-muted-foreground">Record: {log.entity_id ?? "—"} · Actor: {log.actor_id ?? "system"}</p></div>)}</div>;
+}
+
+/* ---------------- Admins ---------------- */
+
+function AdminsTab() {
+  const list = useServerFn(listAdmins);
+  const add = useServerFn(addAdmin);
+  const remove = useServerFn(removeAdmin);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const { data, refetch } = useQuery({ queryKey: ["admin-admins"], queryFn: () => list() });
+
+  const handleAdd = async () => {
+    setBusy(true);
+    try {
+      await add({ data: { email } });
+      setEmail("");
+      toast.success("Admin rights granted");
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not grant admin rights");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRemove = async (userId: string) => {
+    setBusy(true);
+    try {
+      await remove({ data: { userId } });
+      toast.success("Admin rights revoked");
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not revoke admin rights");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+        <h3 className="font-display text-lg">Grant admin rights</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          The person must already have an account on the site. Enter their registered email.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Input
+            className="max-w-sm"
+            type="email"
+            placeholder="person@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button disabled={busy || !email.trim()} onClick={() => void handleAdd()}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Make admin
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {data?.map((a) => (
+          <div
+            key={a.id}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <div>
+              <p className="font-medium">
+                {a.fullName ?? "Admin"} {a.isSelf && <Badge variant="secondary" className="ml-1">You</Badge>}
+              </p>
+              <p className="text-sm text-muted-foreground">{a.email ?? a.userId}</p>
+            </div>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={busy || a.isSelf}
+              onClick={() => void handleRemove(a.userId)}
+            >
+              <Trash2 className="h-4 w-4" /> Revoke
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }

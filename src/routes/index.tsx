@@ -58,25 +58,26 @@ function Home() {
 
   return (
     <Layout>
-      <section className="relative overflow-hidden bg-mesh">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
-        <div className="pointer-events-none absolute -right-24 top-10 hidden h-72 w-72 hex-frame bg-brand opacity-10 lg:block" />
+      <section className="relative overflow-hidden bg-aurora">
+        <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
+        <div className="pointer-events-none absolute -left-32 top-0 h-[28rem] w-[28rem] animate-aurora rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 top-10 hidden h-72 w-72 animate-float hex-frame bg-brand opacity-10 lg:block" />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 md:py-24 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/50 bg-card/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-gold-foreground shadow-soft backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" /> Since {SITE.since}
             </span>
-            <h1 className="mt-6 font-display text-5xl leading-[1.05] text-foreground md:text-6xl">
+            <h1 className="mt-6 animate-fade-up font-display text-5xl leading-[1.05] text-foreground md:text-6xl">
               Knowledge is
-              <span className="block text-gold-gradient">Power.</span>
+              <span className="block shimmer-text">Power.</span>
             </h1>
             <div className="rule-gold mt-6" />
-            <p className="mt-6 max-w-xl text-base text-muted-foreground md:text-lg">
+            <p className="mt-6 max-w-xl animate-fade-up delay-2 text-base text-muted-foreground md:text-lg">
               {SITE.name} teaches practical, job-ready skills in Urdu — free courses to get you
               started, premium programs to take you pro, and live training where your instructor
               answers you in real time.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex animate-fade-up delay-3 flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link to="/courses">
                   Browse courses <ArrowRight className="h-4 w-4" />
@@ -102,7 +103,7 @@ function Home() {
 
           <div className="relative">
             <div className="absolute -inset-3 rounded-[2rem] bg-brand opacity-15 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-gold/30 shadow-lift">
+            <div className="relative animate-fade-up delay-2 overflow-hidden rounded-[1.75rem] border border-gold/30 shadow-lift">
               <img
                 src={heroImage}
                 alt="Student learning an online course at home"
@@ -116,7 +117,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="absolute -bottom-6 -left-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lift">
+            <div className="absolute -bottom-8 -left-8 animate-float glass rounded-2xl px-5 py-4">
               <p className="font-display text-3xl text-gold-gradient">100%</p>
               <p className="text-xs text-muted-foreground">Skill-first training</p>
             </div>
