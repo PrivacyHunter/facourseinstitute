@@ -18,6 +18,7 @@ import { Route as LiveRouteImport } from './routes/live'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
+import { Route as PaymentSlugRouteImport } from './routes/payment/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const CoursesSlugRoute = CoursesSlugRouteImport.update({
   path: '/courses/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentSlugRoute = PaymentSlugRouteImport.update({
+  id: '/payment/$slug',
+  path: '/payment/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
   '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
   '/courses': typeof CoursesIndexRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
   '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
     | '/courses/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
     | '/courses'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
     | '/courses/'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
+  PaymentSlugRoute: typeof PaymentSlugRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
 }
 
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/$slug': {
+      id: '/payment/$slug'
+      path: '/payment/$slug'
+      fullPath: '/payment/$slug'
+      preLoaderRoute: typeof PaymentSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,18 +244,9 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   CoursesSlugRoute: CoursesSlugRoute,
+  PaymentSlugRoute: PaymentSlugRoute,
   CoursesIndexRoute: CoursesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

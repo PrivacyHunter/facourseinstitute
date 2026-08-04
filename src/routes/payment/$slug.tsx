@@ -98,10 +98,18 @@ function PaymentPage() {
 
   const submit = async () => {
     if (!user || !course) return;
-    if (!active) return toast.error("No payment method is available yet.");
-    if (trx.trim().length < 4) return toast.error("Please enter a valid transaction ID.");
-    if (!file && !enrollment?.proof_url)
-      return toast.error("Please upload a screenshot of your payment.");
+    if (!active) {
+      toast.error("No payment method is available yet.");
+      return;
+    }
+    if (trx.trim().length < 4) {
+      toast.error("Please enter a valid transaction ID.");
+      return;
+    }
+    if (!file && !enrollment?.proof_url) {
+      toast.error("Please upload a screenshot of your payment.");
+      return;
+    }
 
     setSaving(true);
     try {
