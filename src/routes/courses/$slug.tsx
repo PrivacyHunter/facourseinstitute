@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
   CheckCircle2,
@@ -37,6 +37,7 @@ function CourseDetail() {
   const { slug } = Route.useParams();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["course", slug],
@@ -78,6 +79,35 @@ function CourseDetail() {
       return data;
     },
   });
+
+  const { data: progress } = useQuery({
+    enabled: !!course?.id && !!user?.id,
+    queryKey: ["progress", course?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("lecture_progress")
+        .select("lecture_id")
+        .eq("user_id", user!.id)
+        .eq("course_id", course!.id);
+      return (data ?? []).map((r) => r.lecture_id);
+    },
+  });
+
+  const toggleDone = async (lectureId: string, done: boolean) => {
+    if (!user || !course) return;
+    if (done) {
+      await supabase
+        .from("lecture_progress")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("lecture_id", lectureId);
+    } else {
+      await supabase
+        .from("lecture_progress")
+        .insert({ user_id: user.id, course_id: course.id, lecture_id: lectureId });
+    }
+    await qc.invalidateQueries({ queryKey: ["progress"] });
+  };
 
   if (isLoading) {
     return (
@@ -252,6 +282,16 @@ function CourseDetail() {
                     ) : (
                       <Button size="sm" variant="outline" disabled>
                         <Lock className="h-4 w-4" /> Locked
+                      </Button>
+                    )}
+                    {unlocked && user && (
+                      <Button
+                        size="sm"
+                        variant={progress?.includes(l.id) ? "secondary" : "outline"}
+                        onClick={() => void toggleDone(l.id, !!progress?.includes(l.id))}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {progress?.includes(l.id) ? "Completed" : "Mark done"}
                       </Button>
                     )}
                     {unlocked && l.resource_url && (
