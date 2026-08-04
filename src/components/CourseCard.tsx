@@ -19,7 +19,7 @@ export type CourseSummary = {
 
 export function CourseCard({ course }: { course: CourseSummary }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift">
+    <article className="group card-lux flex flex-col overflow-hidden rounded-2xl hover:card-lux-hover">
       <div className="relative aspect-video overflow-hidden bg-brand">
         {course.thumbnail_url ? (
           <img
