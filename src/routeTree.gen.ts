@@ -15,9 +15,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FreeRouteImport } from './routes/free'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
+import { Route as PaymentSlugRouteImport } from './routes/payment/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,9 +52,19 @@ const LiveRoute = LiveRouteImport.update({
   path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesIndexRoute = CoursesIndexRouteImport.update({
@@ -64,6 +77,11 @@ const CoursesSlugRoute = CoursesSlugRouteImport.update({
   path: '/courses/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentSlugRoute = PaymentSlugRouteImport.update({
+  id: '/payment/$slug',
+  path: '/payment/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,8 +90,11 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -83,8 +104,11 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/courses': typeof CoursesIndexRoute
 }
 export interface FileRoutesById {
@@ -95,8 +119,11 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
+  '/payment/$slug': typeof PaymentSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRouteTypes {
@@ -108,8 +135,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
+    | '/admin/'
     | '/courses/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,8 +149,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
+    | '/admin'
     | '/courses'
   id:
     | '__root__'
@@ -130,8 +163,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
+    | '/payment/$slug'
+    | '/admin/'
     | '/courses/'
   fileRoutesById: FileRoutesById
 }
@@ -142,8 +178,11 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FreeRoute: typeof FreeRoute
   LiveRoute: typeof LiveRoute
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
+  PaymentSlugRoute: typeof PaymentSlugRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
 }
 
@@ -191,11 +230,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses/': {
@@ -212,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/$slug': {
+      id: '/payment/$slug'
+      path: '/payment/$slug'
+      fullPath: '/payment/$slug'
+      preLoaderRoute: typeof PaymentSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -222,8 +282,11 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FreeRoute: FreeRoute,
   LiveRoute: LiveRoute,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   CoursesSlugRoute: CoursesSlugRoute,
+  PaymentSlugRoute: PaymentSlugRoute,
+  AdminIndexRoute: AdminIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
 }
 export const routeTree = rootRouteImport

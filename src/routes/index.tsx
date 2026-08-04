@@ -58,54 +58,67 @@ function Home() {
 
   return (
     <Layout>
-      <section className="relative overflow-hidden bg-soft">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 md:py-24 lg:grid-cols-2">
+      <section className="relative overflow-hidden bg-mesh">
+        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
+        <div className="pointer-events-none absolute -right-24 top-10 hidden h-72 w-72 hex-frame bg-brand opacity-10 lg:block" />
+        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 md:py-24 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary shadow-soft">
-              <Sparkles className="h-3.5 w-3.5" /> Teaching since {SITE.since}
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/50 bg-card/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-gold-foreground shadow-soft backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" /> Since {SITE.since}
             </span>
-            <h1 className="mt-5 text-4xl font-bold leading-tight text-foreground md:text-5xl">
-              Learn a real skill.{" "}
-              <span className="bg-brand bg-clip-text text-transparent">Change your income.</span>
+            <h1 className="mt-6 font-display text-5xl leading-[1.05] text-foreground md:text-6xl">
+              Knowledge is
+              <span className="block text-gold-gradient">Power.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-              {SITE.name} offers easy-to-follow courses in Urdu — some completely free, others
-              premium — plus live training sessions where you learn directly from your instructor.
+            <div className="rule-gold mt-6" />
+            <p className="mt-6 max-w-xl text-base text-muted-foreground md:text-lg">
+              {SITE.name} teaches practical, job-ready skills in Urdu — free courses to get you
+              started, premium programs to take you pro, and live training where your instructor
+              answers you in real time.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link to="/courses">
                   Browse courses <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/free">Start with free courses</Link>
+                <Link to="/free">Start free</Link>
               </Button>
             </div>
-            <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <BadgeCheck className="h-4 w-4 text-primary" /> Lifetime access
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Radio className="h-4 w-4 text-primary" /> Live sessions
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" /> Urdu / Hindi medium
-              </span>
-            </div>
+            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-border pt-6">
+              {[
+                { k: "Lifetime", v: "Access" },
+                { k: "Live", v: "Sessions" },
+                { k: "Urdu", v: "Medium" },
+              ].map((s) => (
+                <div key={s.k}>
+                  <dt className="font-display text-2xl text-primary">{s.k}</dt>
+                  <dd className="text-xs uppercase tracking-wide text-muted-foreground">{s.v}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
           <div className="relative">
-            <div className="overflow-hidden rounded-2xl border border-border shadow-lift">
+            <div className="absolute -inset-3 rounded-[2rem] bg-brand opacity-15 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-gold/30 shadow-lift">
               <img
                 src={heroImage}
                 alt="Student learning an online course at home"
                 className="h-full w-full object-cover"
               />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/70 to-transparent p-6">
+                <p className="font-display text-xl text-background">Practical. No fluff.</p>
+                <p className="text-xs text-background/80">
+                  <BadgeCheck className="mr-1 inline h-3.5 w-3.5" /> Verified enrollment &amp; admin
+                  approved access
+                </p>
+              </div>
             </div>
-            <div className="absolute -bottom-5 left-5 rounded-xl border border-border bg-card px-4 py-3 shadow-lift">
-              <p className="text-2xl font-bold text-primary">100%</p>
-              <p className="text-xs text-muted-foreground">Practical, no-fluff training</p>
+            <div className="absolute -bottom-6 -left-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-lift">
+              <p className="font-display text-3xl text-gold-gradient">100%</p>
+              <p className="text-xs text-muted-foreground">Skill-first training</p>
             </div>
           </div>
         </div>
@@ -114,7 +127,8 @@ function Home() {
       <section className="mx-auto w-full max-w-6xl px-4 py-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-foreground">Popular courses</h2>
+            <h2 className="font-display text-4xl text-foreground">Popular courses</h2>
+            <div className="rule-gold mt-3" />
             <p className="mt-1 text-sm text-muted-foreground">
               Free and paid programs, updated regularly.
             </p>
@@ -137,7 +151,7 @@ function Home() {
           <div className="rounded-2xl bg-brand p-8 text-primary-foreground shadow-lift md:p-12">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="max-w-xl">
-                <h2 className="text-3xl font-bold">Live training sessions</h2>
+                <h2 className="font-display text-4xl">Live training sessions</h2>
                 <p className="mt-2 text-primary-foreground/85">
                   Join scheduled live classes, ask questions in real time and get personal guidance.
                 </p>
@@ -171,7 +185,7 @@ function Home() {
               text: "Regular live sessions plus our WhatsApp channel for announcements.",
             },
           ].map((f) => (
-            <div key={f.title} className="rounded-xl border border-border bg-card p-6 shadow-soft">
+            <div key={f.title} className="card-lux rounded-2xl p-6 hover:card-lux-hover">
               <f.icon className="h-6 w-6 text-primary" />
               <h3 className="mt-4 text-lg font-semibold text-foreground">{f.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{f.text}</p>
