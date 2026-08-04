@@ -38,7 +38,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { decideEnrollment, listAdminStudents } from "@/lib/admin-actions.functions";
-import { claimFirstAdmin, adminExists } from "@/lib/admin.functions";
+import { listAdmins, addAdmin, removeAdmin } from "@/lib/admins.functions";
 import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 import { SITE, formatPrice, statusLabel } from "@/lib/site";
 
