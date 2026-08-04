@@ -52,6 +52,7 @@ function LivePage() {
       </section>
 
       <section className="mx-auto w-full max-w-4xl px-4 py-12">
+        <div className="mb-8 rounded-xl border border-border bg-card p-8 text-center shadow-soft"><CalendarClock className="mx-auto h-8 w-8 text-primary" /><h2 className="mt-3 font-display text-2xl">Coming soon</h2><p className="mt-2 text-sm text-muted-foreground">Live classes are being prepared. Schedules will appear here when announced.</p></div>
         {isLoading ? (
           <p className="py-16 text-center text-muted-foreground">Loading...</p>
         ) : (data ?? []).length === 0 ? (

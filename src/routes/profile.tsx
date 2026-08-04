@@ -9,6 +9,7 @@ import {
   Hourglass,
   Loader2,
   Sparkles,
+  Bell,
   XCircle,
 } from "lucide-react";
 import { Layout, WhatsAppIcon } from "@/components/Layout";
@@ -20,6 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SITE, formatPrice, statusLabel } from "@/lib/site";
+import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -115,6 +117,13 @@ function ProfilePage() {
       return map;
     },
   });
+
+  const { data: notifications } = useQuery({
+    enabled: !!user?.id,
+    queryKey: ["my-notifications", user?.id],
+    queryFn: async () => (await supabase.from("notifications").select("*").eq("user_id", user?.id ?? "").order("created_at", { ascending: false })).data ?? [],
+  });
+  useRealtimeQueries(["enrollments", "lecture_progress", "notifications"], [["my-enrollments", user?.id], ["my-progress", user?.id], ["my-notifications", user?.id]]);
 
   const saveProfile = async () => {
     if (!user) return;
@@ -309,6 +318,14 @@ function ProfilePage() {
                 <li className="text-sm text-muted-foreground">Free courses coming soon.</li>
               )}
             </ul>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+            <h3 className="inline-flex items-center gap-2 font-display text-xl"><Bell className="h-5 w-5 text-primary" /> Approval &amp; notification history</h3>
+            <div className="mt-4 space-y-3">
+              {notifications?.map((notification) => <div key={notification.id} className="border-l-2 border-primary pl-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{notification.title}</p><Badge variant="secondary">{notification.channel}: {notification.delivery_status}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{notification.message}</p><time className="mt-1 block text-xs text-muted-foreground">{new Date(notification.created_at).toLocaleString()}</time></div>)}
+              {!notifications?.length && <p className="text-sm text-muted-foreground">Payment decisions, receipts and WhatsApp invite updates will appear here.</p>}
+            </div>
           </div>
         </div>
 
