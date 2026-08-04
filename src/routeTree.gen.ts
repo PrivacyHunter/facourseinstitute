@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FreeRouteImport } from './routes/free'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as CoursesIndexRouteImport } from './routes/courses/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses/$slug'
@@ -50,6 +51,11 @@ const LiveRoute = LiveRouteImport.update({
   path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/payment/$slug': typeof PaymentSlugRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/payment/$slug': typeof PaymentSlugRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/free': typeof FreeRoute
   '/live': typeof LiveRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/payment/$slug': typeof PaymentSlugRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
     | '/payment/$slug'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
     | '/payment/$slug'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/free'
     | '/live'
+    | '/profile'
     | '/reset-password'
     | '/courses/$slug'
     | '/payment/$slug'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FreeRoute: typeof FreeRoute
   LiveRoute: typeof LiveRoute
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
   PaymentSlugRoute: typeof PaymentSlugRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FreeRoute: FreeRoute,
   LiveRoute: LiveRoute,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   CoursesSlugRoute: CoursesSlugRoute,
   PaymentSlugRoute: PaymentSlugRoute,
