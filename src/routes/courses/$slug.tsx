@@ -139,8 +139,7 @@ function CourseDetail() {
     <Layout>
       <section className="border-b border-border bg-soft">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 lg:grid-cols-[1.4fr_1fr]">
-                      {l.preview_image_url && <img src={l.preview_image_url} alt={`${l.title} preview`} className="h-16 w-24 rounded-md object-cover" loading="lazy" />}
-                      <div>
+          <div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant={course.is_free ? "secondary" : "default"}>
                 {formatPrice(course.price, course.is_free)}
@@ -264,6 +263,7 @@ function CourseDetail() {
                     <span className="mt-0.5 text-sm font-semibold text-muted-foreground">
                       {String(i + 1).padStart(2, "0")}
                     </span>
+                    {l.preview_image_url && <img src={l.preview_image_url} alt={`${l.title} preview`} className="h-16 w-24 rounded-md object-cover" loading="lazy" />}
                     <div>
                       <p className="font-medium text-foreground">{l.title}</p>
                       {l.description && (
