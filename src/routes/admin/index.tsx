@@ -173,6 +173,7 @@ function AdminPage() {
           <TabsContent value="coupons" className="mt-6"><CouponsTab /></TabsContent>
           <TabsContent value="students" className="mt-6"><StudentsTab /></TabsContent>
           <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
+          <TabsContent value="admins" className="mt-6"><AdminsTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
