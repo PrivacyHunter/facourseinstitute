@@ -773,7 +773,7 @@ function LecturesTab() {
                     is_preview: l.is_preview,
                     sort_order: String(l.sort_order),
                     preview_image_url: l.preview_image_url ?? "",
-                    content_type: l.content_type,
+                    content_type: l.content_type as LectureForm["content_type"],
                   })
                 }
               >
@@ -1321,4 +1321,70 @@ function MessagesTab() {
       ))}
     </div>
   );
+}
+
+function CouponsTab() {
+  const qc = useQueryClient();
+  const [code, setCode] = useState("");
+  const [type, setType] = useState<"percentage" | "fixed">("percentage");
+  const [value, setValue] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: async () => (await supabase.from("coupons").select("*").order("created_at", { ascending: false })).data ?? [],
+  });
+  useRealtimeQueries(["coupons"], [["admin-coupons"]]);
+
+  const add = async () => {
+    const normalized = code.trim().toUpperCase();
+    const discount = Number(value);
+    if (normalized.length < 3 || discount <= 0 || (type === "percentage" && discount > 100)) {
+      toast.error("Enter a valid coupon and discount");
+      return;
+    }
+    const { error } = await supabase.from("coupons").insert({
+      code: normalized,
+      discount_type: type,
+      discount_value: discount,
+      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      created_by: user?.id ?? null,
+    });
+    if (error) toast.error(error.message);
+    else {
+      setCode(""); setValue(""); setExpiresAt("");
+      toast.success("Coupon created");
+      await qc.invalidateQueries({ queryKey: ["admin-coupons"] });
+    }
+  };
+
+  return <div className="space-y-5">
+    <div className="grid gap-3 rounded-xl border border-border bg-card p-5 md:grid-cols-5">
+      <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="COURSE20" />
+      <select className="h-9 rounded-md border border-input bg-background px-3 text-sm" value={type} onChange={(e) => setType(e.target.value as "percentage" | "fixed")}><option value="percentage">Percentage</option><option value="fixed">Fixed PKR</option></select>
+      <Input type="number" min="1" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Discount" />
+      <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+      <Button onClick={() => void add()}><Plus className="h-4 w-4" /> Create</Button>
+    </div>
+    <div className="grid gap-3 md:grid-cols-2">{data?.map((coupon) => <div key={coupon.id} className="rounded-xl border border-border bg-card p-4"><div className="flex items-center justify-between"><strong className="font-mono">{coupon.code}</strong><Switch checked={coupon.is_active} onCheckedChange={async (is_active) => { await supabase.from("coupons").update({ is_active }).eq("id", coupon.id); await qc.invalidateQueries({ queryKey: ["admin-coupons"] }); }} /></div><p className="mt-1 text-sm text-muted-foreground">{coupon.discount_type === "percentage" ? `${coupon.discount_value}% off` : `PKR ${coupon.discount_value} off`} · {coupon.expires_at ? `expires ${new Date(coupon.expires_at).toLocaleString()}` : "no expiry"}</p></div>)}</div>
+  </div>;
+}
+
+function StudentsTab() {
+  const listStudents = useServerFn(listAdminStudents);
+  const { data: students } = useQuery({ queryKey: ["admin-students"], queryFn: () => listStudents() });
+  const { data: progress } = useQuery({ queryKey: ["admin-student-progress"], queryFn: async () => (await supabase.from("lecture_progress").select("user_id,course_id,lecture_id,completed_at")).data ?? [] });
+  const { data: enrollments } = useQuery({ queryKey: ["admin-enrollments"], queryFn: async () => (await supabase.from("enrollments").select("user_id,status,access_expires_at,courses(title)")).data ?? [] });
+  useRealtimeQueries(["lecture_progress", "enrollments"], [["admin-student-progress"], ["admin-enrollments"]]);
+  return <div className="space-y-3">{students?.map((student) => {
+    const plans = enrollments?.filter((row) => row.user_id === student.id) ?? [];
+    const done = progress?.filter((row) => row.user_id === student.id).length ?? 0;
+    return <div key={student.id} className="rounded-xl border border-border bg-card p-4"><div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-semibold">{student.fullName || student.email || "Student"}</h3><p className="text-sm text-muted-foreground">{student.email} · {student.provider}</p></div><div className="text-right text-xs text-muted-foreground"><p>Joined {new Date(student.createdAt).toLocaleString()}</p><p>Last login {student.lastSignInAt ? new Date(student.lastSignInAt).toLocaleString() : "Not yet"}</p></div></div><p className="mt-3 text-sm">{done} lectures completed · {plans.length} course records</p><div className="mt-2 flex flex-wrap gap-2">{plans.map((plan, index) => <Badge key={`${student.id}-${index}`} variant={plan.status === "approved" ? "default" : "secondary"}>{plan.courses?.title ?? "Course"}: {plan.status}{plan.access_expires_at ? ` · until ${new Date(plan.access_expires_at).toLocaleDateString()}` : ""}</Badge>)}</div></div>;
+  })}</div>;
+}
+
+function AuditTab() {
+  const { data } = useQuery({ queryKey: ["admin-audit"], queryFn: async () => (await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200)).data ?? [] });
+  useRealtimeQueries(["audit_logs"], [["admin-audit"]]);
+  return <div className="space-y-2">{data?.map((log) => <div key={log.id} className="rounded-lg border border-border bg-card px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium capitalize">{log.action} · {log.entity_type}</p><time className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</time></div><p className="mt-1 font-mono text-xs text-muted-foreground">Record: {log.entity_id ?? "—"} · Actor: {log.actor_id ?? "system"}</p></div>)}</div>;
 }
