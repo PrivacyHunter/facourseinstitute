@@ -68,11 +68,7 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, "");
 
 function AdminPage() {
-  const { user, isAdmin, loading, refreshRole } = useAuth();
-  const claim = useServerFn(claimFirstAdmin);
-  const exists = useServerFn(adminExists);
-  const [claiming, setClaiming] = useState(false);
-  const { data: hasAdmin } = useQuery({ queryKey: ["admin-exists"], queryFn: () => exists() });
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -86,8 +82,8 @@ function AdminPage() {
     return (
       <Layout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-3xl">Admin access</h1>
-          <p className="mt-2 text-muted-foreground">Sign in with your admin account.</p>
+          <h1 className="font-display text-3xl">Restricted area</h1>
+          <p className="mt-2 text-muted-foreground">Sign in with an authorised admin account to continue.</p>
           <Button asChild className="mt-6">
             <Link to="/auth">Sign in</Link>
           </Button>
@@ -100,18 +96,18 @@ function AdminPage() {
     return (
       <Layout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="font-display text-3xl">Not an admin</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This area is protected by account sign-in and the server-verified admin role.</p>
-          {!hasAdmin?.exists && <Button className="mt-6" disabled={claiming} onClick={async () => {
-            setClaiming(true);
-            try { const result = await claim(); toast[result.ok ? "success" : "error"](result.reason); await refreshRole(); }
-            catch (error) { toast.error(error instanceof Error ? error.message : "Could not activate admin"); }
-            finally { setClaiming(false); }
-          }}>{claiming && <Loader2 className="h-4 w-4 animate-spin" />} Activate first admin</Button>}
+          <h1 className="font-display text-3xl">Page not available</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your account does not have admin permissions. Contact the site owner if you believe this is a mistake.
+          </p>
+          <Button asChild variant="outline" className="mt-6">
+            <Link to="/">Back to home</Link>
+          </Button>
         </div>
       </Layout>
     );
   }
+
 
   return (
     <Layout>
