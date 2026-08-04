@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatPrice } from "@/lib/site";
+import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 
 export const Route = createFileRoute("/courses/$slug")({
   head: ({ params }) => ({
@@ -92,6 +93,7 @@ function CourseDetail() {
       return (data ?? []).map((r) => r.lecture_id);
     },
   });
+  useRealtimeQueries(["lectures", "lecture_progress", "enrollments"], [["lectures", course?.id, user?.id], ["progress", course?.id, user?.id], ["enrollment", course?.id, user?.id]]);
 
   const toggleDone = async (lectureId: string, done: boolean) => {
     if (!user || !course) return;
@@ -137,7 +139,8 @@ function CourseDetail() {
     <Layout>
       <section className="border-b border-border bg-soft">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 lg:grid-cols-[1.4fr_1fr]">
-          <div>
+                      {l.preview_image_url && <img src={l.preview_image_url} alt={`${l.title} preview`} className="h-16 w-24 rounded-md object-cover" loading="lazy" />}
+                      <div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant={course.is_free ? "secondary" : "default"}>
                 {formatPrice(course.price, course.is_free)}
@@ -275,8 +278,8 @@ function CourseDetail() {
                   <div className="flex gap-2">
                     {unlocked && l.video_url ? (
                       <Button asChild size="sm">
-                        <a href={l.video_url} target="_blank" rel="noreferrer">
-                          <PlayCircle className="h-4 w-4" /> Watch
+                        <a href={l.video_url} target="_blank" rel="noreferrer" download={false}>
+                          <PlayCircle className="h-4 w-4" /> View lesson
                         </a>
                       </Button>
                     ) : (

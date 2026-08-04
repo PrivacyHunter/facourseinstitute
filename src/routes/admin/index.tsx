@@ -38,6 +38,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { decideEnrollment, listAdminStudents } from "@/lib/admin-actions.functions";
+import { claimFirstAdmin, adminExists } from "@/lib/admin.functions";
 import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 import { SITE, formatPrice, statusLabel } from "@/lib/site";
 
@@ -67,7 +68,11 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, "");
 
 function AdminPage() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, refreshRole } = useAuth();
+  const claim = useServerFn(claimFirstAdmin);
+  const exists = useServerFn(adminExists);
+  const [claiming, setClaiming] = useState(false);
+  const { data: hasAdmin } = useQuery({ queryKey: ["admin-exists"], queryFn: () => exists() });
 
   if (loading) {
     return (
@@ -97,6 +102,12 @@ function AdminPage() {
         <div className="mx-auto max-w-md px-4 py-24 text-center">
           <h1 className="font-display text-3xl">Not an admin</h1>
           <p className="mt-2 text-sm text-muted-foreground">This area is protected by account sign-in and the server-verified admin role.</p>
+          {!hasAdmin?.exists && <Button className="mt-6" disabled={claiming} onClick={async () => {
+            setClaiming(true);
+            try { const result = await claim(); toast[result.ok ? "success" : "error"](result.reason); await refreshRole(); }
+            catch (error) { toast.error(error instanceof Error ? error.message : "Could not activate admin"); }
+            finally { setClaiming(false); }
+          }}>{claiming && <Loader2 className="h-4 w-4 animate-spin" />} Activate first admin</Button>}
         </div>
       </Layout>
     );
