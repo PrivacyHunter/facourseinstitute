@@ -204,7 +204,7 @@ function EnrollmentsTab() {
     const { data, error } = await supabase.storage
       .from("payment-proofs")
       .createSignedUrl(path, 300);
-    if (error || !data) return toast.error("Could not open proof image");
+    if (error || !data) { toast.error("Could not open proof image"); return; }
     window.open(data.signedUrl, "_blank");
   };
 
@@ -229,7 +229,7 @@ function EnrollmentsTab() {
       .update({ status, admin_message: message, reviewed_at: new Date().toISOString() })
       .eq("id", row.id);
     setBusy(null);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
     toast.success(`Marked as ${status}`);
 
@@ -413,7 +413,7 @@ function CoursesTab() {
       ? await supabase.from("courses").update(payload).eq("id", form.id)
       : await supabase.from("courses").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(form.id ? "Course updated" : "Course added");
     setForm(null);
     await qc.invalidateQueries({ queryKey: ["admin-courses"] });
@@ -422,7 +422,7 @@ function CoursesTab() {
   const remove = async (id: string) => {
     if (!confirm("Delete this course and all of its lectures?")) return;
     const { error } = await supabase.from("courses").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Course deleted");
     await qc.invalidateQueries({ queryKey: ["admin-courses"] });
   };
@@ -682,7 +682,7 @@ function LecturesTab() {
       ? await supabase.from("lectures").update(payload).eq("id", form.id)
       : await supabase.from("lectures").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     setForm(null);
     await qc.invalidateQueries({ queryKey: ["admin-lectures"] });
@@ -691,7 +691,7 @@ function LecturesTab() {
   const remove = async (id: string) => {
     if (!confirm("Delete this lecture?")) return;
     const { error } = await supabase.from("lectures").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["admin-lectures"] });
     toast.success("Lecture deleted");
   };
@@ -902,7 +902,7 @@ function MethodsTab() {
       ? await supabase.from("payment_methods").update(payload).eq("id", form.id)
       : await supabase.from("payment_methods").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     setForm(null);
     await qc.invalidateQueries({ queryKey: ["admin-methods"] });
@@ -1098,7 +1098,7 @@ function LiveTab() {
       ? await supabase.from("live_sessions").update(payload).eq("id", form.id)
       : await supabase.from("live_sessions").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     setForm(null);
     await qc.invalidateQueries({ queryKey: ["admin-live"] });
