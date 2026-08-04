@@ -117,7 +117,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="absolute -bottom-6 -left-4 animate-float glass rounded-2xl px-5 py-4">
+            <div className="absolute -bottom-8 -left-8 animate-float glass rounded-2xl px-5 py-4">
               <p className="font-display text-3xl text-gold-gradient">100%</p>
               <p className="text-xs text-muted-foreground">Skill-first training</p>
             </div>
