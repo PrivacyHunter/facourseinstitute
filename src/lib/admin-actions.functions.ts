@@ -55,7 +55,7 @@ export const listAdminStudents = createServerFn({ method: "GET" })
     return data.users.map((user) => ({
       id: user.id,
       email: user.email ?? null,
-      fullName: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : null,
+      fullName: typeof user.user_metadata?.['full_name'] === "string" ? user.user_metadata['full_name'] : null,
       createdAt: user.created_at,
       lastSignInAt: user.last_sign_in_at ?? null,
       provider: user.app_metadata?.provider ?? "email",
