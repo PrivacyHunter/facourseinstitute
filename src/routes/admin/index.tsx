@@ -149,6 +149,7 @@ function AdminPage() {
             <TabsTrigger value="coupons"><TicketPercent className="h-4 w-4" /> Coupons</TabsTrigger>
             <TabsTrigger value="students"><UserRoundSearch className="h-4 w-4" /> Students</TabsTrigger>
             <TabsTrigger value="audit"><Activity className="h-4 w-4" /> Audit log</TabsTrigger>
+            <TabsTrigger value="admins"><ShieldCheck className="h-4 w-4" /> Admins</TabsTrigger>
           </TabsList>
 
           <TabsContent value="enrollments" className="mt-6">
