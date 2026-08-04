@@ -6,11 +6,13 @@ export const decideEnrollment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => enrollmentDecisionSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (roleError || !isAdmin) throw new Error("Admin access required");
+    const { data: adminRole, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError || !adminRole) throw new Error("Admin access required");
 
     const now = new Date();
     const { data: enrollment, error: readError } = await context.supabase
@@ -44,11 +46,13 @@ export const decideEnrollment = createServerFn({ method: "POST" })
 export const listAdminStudents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (roleError || !isAdmin) throw new Error("Admin access required");
+    const { data: adminRole, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError || !adminRole) throw new Error("Admin access required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 });
     if (error) throw new Error(error.message);
