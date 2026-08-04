@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { Menu, X, LogOut, LayoutDashboard, UserRound } from "lucide-react";
+import { Menu, X, LogOut, UserRound } from "lucide-react";
 import logo from "@/assets/fa-logo.png.asset.json";
 import { SITE } from "@/lib/site";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,7 +26,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -62,13 +62,6 @@ export function Layout({ children }: { children: ReactNode }) {
             >
               <WhatsAppIcon className="h-5 w-5" />
             </a>
-            {isAdmin && (
-              <Button asChild variant="outline" size="sm">
-                <Link to="/admin">
-                  <LayoutDashboard className="h-4 w-4" /> Admin
-                </Link>
-              </Button>
-            )}
             {user ? (
               <>
                 <Button asChild variant="ghost" size="sm">
@@ -117,11 +110,6 @@ export function Layout({ children }: { children: ReactNode }) {
                 </Link>
               ))}
               <div className="mt-2 flex flex-wrap gap-2">
-                {isAdmin && (
-                  <Button asChild variant="outline" size="sm" onClick={() => setOpen(false)}>
-                    <Link to="/admin">Admin Panel</Link>
-                  </Button>
-                )}
                 {user ? (
                   <>
                     <Button asChild variant="ghost" size="sm" onClick={() => setOpen(false)}>
