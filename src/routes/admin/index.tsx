@@ -1398,3 +1398,89 @@ function AuditTab() {
   useRealtimeQueries(["audit_logs"], [["admin-audit"]]);
   return <div className="space-y-2">{data?.map((log) => <div key={log.id} className="rounded-lg border border-border bg-card px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium capitalize">{log.action} · {log.entity_type}</p><time className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</time></div><p className="mt-1 font-mono text-xs text-muted-foreground">Record: {log.entity_id ?? "—"} · Actor: {log.actor_id ?? "system"}</p></div>)}</div>;
 }
+
+/* ---------------- Admins ---------------- */
+
+function AdminsTab() {
+  const list = useServerFn(listAdmins);
+  const add = useServerFn(addAdmin);
+  const remove = useServerFn(removeAdmin);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const { data, refetch } = useQuery({ queryKey: ["admin-admins"], queryFn: () => list() });
+
+  const handleAdd = async () => {
+    setBusy(true);
+    try {
+      await add({ data: { email } });
+      setEmail("");
+      toast.success("Admin rights granted");
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not grant admin rights");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRemove = async (userId: string) => {
+    setBusy(true);
+    try {
+      await remove({ data: { userId } });
+      toast.success("Admin rights revoked");
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not revoke admin rights");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+        <h3 className="font-display text-lg">Grant admin rights</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          The person must already have an account on the site. Enter their registered email.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Input
+            className="max-w-sm"
+            type="email"
+            placeholder="person@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button disabled={busy || !email.trim()} onClick={() => void handleAdd()}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Make admin
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {data?.map((a) => (
+          <div
+            key={a.id}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <div>
+              <p className="font-medium">
+                {a.fullName ?? "Admin"} {a.isSelf && <Badge variant="secondary" className="ml-1">You</Badge>}
+              </p>
+              <p className="text-sm text-muted-foreground">{a.email ?? a.userId}</p>
+            </div>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={busy || a.isSelf}
+              onClick={() => void handleRemove(a.userId)}
+            >
+              <Trash2 className="h-4 w-4" /> Revoke
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
