@@ -170,3 +170,42 @@
 @utility hex-frame {
   clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%);
 }
+
+@utility bg-mesh {
+  background-image:
+    radial-gradient(60rem 30rem at 8% -10%, oklch(0.4 0.155 313 / 0.16), transparent 60%),
+    radial-gradient(45rem 26rem at 100% 0%, oklch(0.79 0.125 82 / 0.18), transparent 60%),
+    var(--gradient-soft);
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, oklch(0.4 0.155 313 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.4 0.155 313 / 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@utility text-gold-gradient {
+  background-image: linear-gradient(100deg, oklch(0.86 0.11 88), oklch(0.74 0.14 72) 55%, oklch(0.9 0.09 95));
+  background-clip: text;
+  color: transparent;
+}
+
+@utility rule-gold {
+  height: 2px;
+  width: 4rem;
+  background-image: linear-gradient(90deg, var(--gold), transparent);
+}
+
+@utility card-lux {
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+@utility card-lux-hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
