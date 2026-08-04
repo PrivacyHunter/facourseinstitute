@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          new_data: Json | null
+          old_data: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          new_data?: Json | null
+          old_data?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          new_data?: Json | null
+          old_data?: Json | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -44,8 +80,87 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_courses: {
+        Row: {
+          coupon_id: string
+          course_id: string
+          created_at: string
+        }
+        Insert: {
+          coupon_id: string
+          course_id: string
+          created_at?: string
+        }
+        Update: {
+          coupon_id?: string
+          course_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_courses_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          starts_at: string
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          starts_at?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          starts_at?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
+          access_duration_days: number | null
           category: string | null
           created_at: string
           description: string | null
@@ -66,6 +181,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_duration_days?: number | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -86,6 +202,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_duration_days?: number | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -109,48 +226,82 @@ export type Database = {
       }
       enrollments: {
         Row: {
+          access_expires_at: string | null
+          access_started_at: string | null
           admin_message: string | null
           amount: number | null
+          approved_by: string | null
+          coupon_code: string | null
+          coupon_id: string | null
           course_id: string
           created_at: string
+          discount_amount: number
           id: string
+          original_amount: number | null
           payment_method_name: string | null
           proof_url: string | null
+          receipt_status: string
           reviewed_at: string | null
           status: string
           transaction_id: string | null
           updated_at: string
           user_id: string
+          whatsapp_status: string
         }
         Insert: {
+          access_expires_at?: string | null
+          access_started_at?: string | null
           admin_message?: string | null
           amount?: number | null
+          approved_by?: string | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           course_id: string
           created_at?: string
+          discount_amount?: number
           id?: string
+          original_amount?: number | null
           payment_method_name?: string | null
           proof_url?: string | null
+          receipt_status?: string
           reviewed_at?: string | null
           status?: string
           transaction_id?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_status?: string
         }
         Update: {
+          access_expires_at?: string | null
+          access_started_at?: string | null
           admin_message?: string | null
           amount?: number | null
+          approved_by?: string | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           course_id?: string
           created_at?: string
+          discount_amount?: number
           id?: string
+          original_amount?: number | null
           payment_method_name?: string | null
           proof_url?: string | null
+          receipt_status?: string
           reviewed_at?: string | null
           status?: string
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "enrollments_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "enrollments_course_id_fkey"
             columns: ["course_id"]
@@ -204,12 +355,14 @@ export type Database = {
       }
       lectures: {
         Row: {
+          content_type: string
           course_id: string
           created_at: string
           description: string | null
           duration: string | null
           id: string
           is_preview: boolean
+          preview_image_url: string | null
           resource_url: string | null
           sort_order: number
           title: string
@@ -217,12 +370,14 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          content_type?: string
           course_id: string
           created_at?: string
           description?: string | null
           duration?: string | null
           id?: string
           is_preview?: boolean
+          preview_image_url?: string | null
           resource_url?: string | null
           sort_order?: number
           title: string
@@ -230,12 +385,14 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          content_type?: string
           course_id?: string
           created_at?: string
           description?: string | null
           duration?: string | null
           id?: string
           is_preview?: boolean
+          preview_image_url?: string | null
           resource_url?: string | null
           sort_order?: number
           title?: string
@@ -295,6 +452,56 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          channel: string
+          created_at: string
+          delivered_at: string | null
+          delivery_status: string
+          enrollment_id: string | null
+          id: string
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          enrollment_id?: string | null
+          id?: string
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          enrollment_id?: string | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
         ]
@@ -417,13 +624,6 @@ export type Database = {
     Functions: {
       has_course_access: {
         Args: { _course_id: string; _user_id: string }
-        Returns: boolean
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
         Returns: boolean
       }
     }

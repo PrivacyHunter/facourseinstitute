@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatPrice } from "@/lib/site";
+import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 
 export const Route = createFileRoute("/courses/$slug")({
   head: ({ params }) => ({
@@ -92,6 +93,7 @@ function CourseDetail() {
       return (data ?? []).map((r) => r.lecture_id);
     },
   });
+  useRealtimeQueries(["lectures", "lecture_progress", "enrollments"], [["lectures", course?.id, user?.id], ["progress", course?.id, user?.id], ["enrollment", course?.id, user?.id]]);
 
   const toggleDone = async (lectureId: string, done: boolean) => {
     if (!user || !course) return;
@@ -261,6 +263,7 @@ function CourseDetail() {
                     <span className="mt-0.5 text-sm font-semibold text-muted-foreground">
                       {String(i + 1).padStart(2, "0")}
                     </span>
+                    {l.preview_image_url && <img src={l.preview_image_url} alt={`${l.title} preview`} className="h-16 w-24 rounded-md object-cover" loading="lazy" />}
                     <div>
                       <p className="font-medium text-foreground">{l.title}</p>
                       {l.description && (
@@ -275,8 +278,8 @@ function CourseDetail() {
                   <div className="flex gap-2">
                     {unlocked && l.video_url ? (
                       <Button asChild size="sm">
-                        <a href={l.video_url} target="_blank" rel="noreferrer">
-                          <PlayCircle className="h-4 w-4" /> Watch
+                        <a href={l.video_url} target="_blank" rel="noreferrer" download={false}>
+                          <PlayCircle className="h-4 w-4" /> View lesson
                         </a>
                       </Button>
                     ) : (

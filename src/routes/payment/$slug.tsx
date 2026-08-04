@@ -54,6 +54,8 @@ function PaymentPage() {
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [coupon, setCoupon] = useState<{ id: string; code: string; discount_type: string; discount_value: number } | null>(null);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["course", slug],
@@ -95,6 +97,17 @@ function PaymentPage() {
   });
 
   const active = methods?.find((m) => m.id === methodId) ?? methods?.[0] ?? null;
+  const originalAmount = Number(course?.price ?? 0);
+  const discountAmount = coupon ? Math.min(originalAmount, coupon.discount_type === "percentage" ? originalAmount * coupon.discount_value / 100 : coupon.discount_value) : 0;
+  const payableAmount = Math.max(0, originalAmount - discountAmount);
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    const { data } = await supabase.from("coupons").select("id,code,discount_type,discount_value,coupon_courses(course_id)").eq("code", code).eq("is_active", true).lte("starts_at", new Date().toISOString()).or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).maybeSingle();
+    const allowed = !data?.coupon_courses?.length || data.coupon_courses.some((item) => item.course_id === course?.id);
+    if (!data || !allowed) { setCoupon(null); toast.error("Coupon is invalid or not available for this course"); return; }
+    setCoupon(data); toast.success("Coupon applied");
+  };
 
   const submit = async () => {
     if (!user || !course) return;
@@ -131,7 +144,11 @@ function PaymentPage() {
         transaction_id: trx.trim(),
         proof_url: proofPath,
         payment_method_name: active.name,
-        amount: course.price,
+        amount: payableAmount,
+        original_amount: originalAmount,
+        discount_amount: discountAmount,
+        coupon_id: coupon?.id ?? null,
+        coupon_code: coupon?.code ?? null,
         admin_message: note.trim() ? `Student note: ${note.trim()}` : null,
       };
 
@@ -317,6 +334,11 @@ function PaymentPage() {
               )}
 
               <div className="mt-5 space-y-4">
+                <div>
+                  <Label htmlFor="coupon">Coupon code</Label>
+                  <div className="mt-1 flex gap-2"><Input id="coupon" value={couponCode} maxLength={40} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Optional" /><Button type="button" variant="outline" onClick={() => void applyCoupon()}>Apply</Button></div>
+                  {coupon && <p className="mt-2 text-sm text-success">{coupon.code} applied — payable {formatPrice(payableAmount, false)}</p>}
+                </div>
                 <div>
                   <Label htmlFor="trx">Transaction ID / TID</Label>
                   <Input

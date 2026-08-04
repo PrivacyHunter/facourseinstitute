@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Activity,
   BookOpen,
   Check,
   CreditCard,
@@ -15,6 +16,8 @@ import {
   Radio,
   Trash2,
   Users,
+  UserRoundSearch,
+  TicketPercent,
   X,
 } from "lucide-react";
 import { Layout, WhatsAppIcon } from "@/components/Layout";
@@ -34,7 +37,9 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { claimFirstAdmin } from "@/lib/admin.functions";
+import { decideEnrollment, listAdminStudents } from "@/lib/admin-actions.functions";
+import { claimFirstAdmin, adminExists } from "@/lib/admin.functions";
+import { useRealtimeQueries } from "@/hooks/useRealtimeQueries";
 import { SITE, formatPrice, statusLabel } from "@/lib/site";
 
 export const Route = createFileRoute("/admin/")({
@@ -65,7 +70,9 @@ const slugify = (s: string) =>
 function AdminPage() {
   const { user, isAdmin, loading, refreshRole } = useAuth();
   const claim = useServerFn(claimFirstAdmin);
+  const exists = useServerFn(adminExists);
   const [claiming, setClaiming] = useState(false);
+  const { data: hasAdmin } = useQuery({ queryKey: ["admin-exists"], queryFn: () => exists() });
 
   if (loading) {
     return (
@@ -94,27 +101,13 @@ function AdminPage() {
       <Layout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
           <h1 className="font-display text-3xl">Not an admin</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            If this is a brand-new site, you can claim the admin role once.
-          </p>
-          <Button
-            className="mt-6"
-            disabled={claiming}
-            onClick={async () => {
-              setClaiming(true);
-              try {
-                const res = await claim();
-                toast[res.ok ? "success" : "error"](res.reason);
-                await refreshRole();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Failed");
-              } finally {
-                setClaiming(false);
-              }
-            }}
-          >
-            {claiming && <Loader2 className="h-4 w-4 animate-spin" />} Claim admin role
-          </Button>
+          <p className="mt-2 text-sm text-muted-foreground">This area is protected by account sign-in and the server-verified admin role.</p>
+          {!hasAdmin?.exists && <Button className="mt-6" disabled={claiming} onClick={async () => {
+            setClaiming(true);
+            try { const result = await claim(); toast[result.ok ? "success" : "error"](result.reason); await refreshRole(); }
+            catch (error) { toast.error(error instanceof Error ? error.message : "Could not activate admin"); }
+            finally { setClaiming(false); }
+          }}>{claiming && <Loader2 className="h-4 w-4 animate-spin" />} Activate first admin</Button>}
         </div>
       </Layout>
     );
@@ -156,6 +149,9 @@ function AdminPage() {
             <TabsTrigger value="messages">
               <Mail className="h-4 w-4" /> Messages
             </TabsTrigger>
+            <TabsTrigger value="coupons"><TicketPercent className="h-4 w-4" /> Coupons</TabsTrigger>
+            <TabsTrigger value="students"><UserRoundSearch className="h-4 w-4" /> Students</TabsTrigger>
+            <TabsTrigger value="audit"><Activity className="h-4 w-4" /> Audit log</TabsTrigger>
           </TabsList>
 
           <TabsContent value="enrollments" className="mt-6">
@@ -176,6 +172,9 @@ function AdminPage() {
           <TabsContent value="messages" className="mt-6">
             <MessagesTab />
           </TabsContent>
+          <TabsContent value="coupons" className="mt-6"><CouponsTab /></TabsContent>
+          <TabsContent value="students" className="mt-6"><StudentsTab /></TabsContent>
+          <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -186,6 +185,7 @@ function AdminPage() {
 
 function EnrollmentsTab() {
   const qc = useQueryClient();
+  const decide = useServerFn(decideEnrollment);
   const [msg, setMsg] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -199,6 +199,7 @@ function EnrollmentsTab() {
       return data ?? [];
     },
   });
+  useRealtimeQueries(["enrollments"], [["admin-enrollments"]]);
 
   const openProof = async (path: string) => {
     const { data, error } = await supabase.storage
@@ -224,10 +225,12 @@ function EnrollmentsTab() {
           ? custom || "Your payment could not be verified. Please resubmit a clear screenshot."
           : custom || null;
 
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ status, admin_message: message, reviewed_at: new Date().toISOString() })
-      .eq("id", row.id);
+    let error: Error | null = null;
+    try {
+      await decide({ data: { enrollmentId: row.id, status, message } });
+    } catch (cause) {
+      error = cause instanceof Error ? cause : new Error("Approval failed");
+    }
     setBusy(null);
     if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
@@ -354,6 +357,7 @@ type CourseForm = {
   is_free: boolean;
   published: boolean;
   featured: boolean;
+  access_duration_days: string;
 };
 
 const emptyCourse: CourseForm = {
@@ -371,6 +375,7 @@ const emptyCourse: CourseForm = {
   is_free: false,
   published: true,
   featured: false,
+  access_duration_days: "",
 };
 
 function CoursesTab() {
@@ -408,6 +413,7 @@ function CoursesTab() {
       is_free: form.is_free,
       published: form.published,
       featured: form.featured,
+      access_duration_days: form.access_duration_days ? Number(form.access_duration_days) : null,
     };
     const { error } = form.id
       ? await supabase.from("courses").update(payload).eq("id", form.id)
@@ -475,6 +481,7 @@ function CoursesTab() {
                     is_free: c.is_free,
                     published: c.published,
                     featured: c.featured,
+                    access_duration_days: c.access_duration_days ? String(c.access_duration_days) : "",
                   })
                 }
               >
@@ -531,6 +538,7 @@ function CoursesTab() {
                   value={form.thumbnail_url}
                   onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
                 />
+                {form.thumbnail_url && <img src={form.thumbnail_url} alt="Course thumbnail preview" className="mt-2 aspect-video w-full rounded-md border border-border object-cover" />}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -577,6 +585,10 @@ function CoursesTab() {
                     disabled={form.is_free}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                   />
+                </div>
+                <div>
+                  <Label>Access days</Label>
+                  <Input type="number" min="1" value={form.access_duration_days} placeholder="Blank = lifetime" onChange={(e) => setForm({ ...form, access_duration_days: e.target.value })} />
                 </div>
               </div>
               <div className="flex flex-wrap gap-6 pt-1">
@@ -630,6 +642,8 @@ type LectureForm = {
   duration: string;
   is_preview: boolean;
   sort_order: string;
+  preview_image_url: string;
+  content_type: "video" | "drive" | "document" | "external";
 };
 
 function LecturesTab() {
@@ -677,6 +691,8 @@ function LecturesTab() {
       duration: form.duration.trim() || null,
       is_preview: form.is_preview,
       sort_order: Number(form.sort_order) || 0,
+      preview_image_url: form.preview_image_url.trim() || null,
+      content_type: form.content_type,
     };
     const { error } = form.id
       ? await supabase.from("lectures").update(payload).eq("id", form.id)
@@ -725,6 +741,8 @@ function LecturesTab() {
               duration: "",
               is_preview: false,
               sort_order: String((lectures?.length ?? 0) + 1),
+              preview_image_url: "",
+              content_type: "video",
             })
           }
         >
@@ -738,7 +756,9 @@ function LecturesTab() {
             key={l.id}
             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-soft"
           >
-            <div>
+            <div className="flex items-center gap-3">
+              {l.preview_image_url && <img src={l.preview_image_url} alt="" className="h-14 w-20 rounded-md object-cover" />}
+              <div>
               <p className="font-medium">
                 {String(i + 1).padStart(2, "0")}. {l.title}
               </p>
@@ -746,6 +766,7 @@ function LecturesTab() {
                 {l.video_url ? l.video_url : "No video link"} {l.duration ? `· ${l.duration}` : ""}
                 {l.is_preview ? " · Free preview" : ""}
               </p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
@@ -762,6 +783,8 @@ function LecturesTab() {
                     duration: l.duration ?? "",
                     is_preview: l.is_preview,
                     sort_order: String(l.sort_order),
+                    preview_image_url: l.preview_image_url ?? "",
+                    content_type: l.content_type as LectureForm["content_type"],
                   })
                 }
               >
@@ -809,6 +832,17 @@ function LecturesTab() {
                   placeholder="YouTube / Drive / Vimeo link"
                   onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label>Preview image URL</Label>
+                <Input value={form.preview_image_url} onChange={(e) => setForm({ ...form, preview_image_url: e.target.value })} />
+                {form.preview_image_url && <img src={form.preview_image_url} alt="Lecture preview" className="mt-2 aspect-video w-full rounded-md border border-border object-cover" />}
+              </div>
+              <div>
+                <Label>Content type</Label>
+                <select className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.content_type} onChange={(e) => setForm({ ...form, content_type: e.target.value as LectureForm['content_type'] })}>
+                  <option value="video">Video</option><option value="drive">Google Drive</option><option value="document">Document</option><option value="external">External</option>
+                </select>
               </div>
               <div>
                 <Label>Resource / files link</Label>
@@ -1298,4 +1332,70 @@ function MessagesTab() {
       ))}
     </div>
   );
+}
+
+function CouponsTab() {
+  const qc = useQueryClient();
+  const [code, setCode] = useState("");
+  const [type, setType] = useState<"percentage" | "fixed">("percentage");
+  const [value, setValue] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: async () => (await supabase.from("coupons").select("*").order("created_at", { ascending: false })).data ?? [],
+  });
+  useRealtimeQueries(["coupons"], [["admin-coupons"]]);
+
+  const add = async () => {
+    const normalized = code.trim().toUpperCase();
+    const discount = Number(value);
+    if (normalized.length < 3 || discount <= 0 || (type === "percentage" && discount > 100)) {
+      toast.error("Enter a valid coupon and discount");
+      return;
+    }
+    const { error } = await supabase.from("coupons").insert({
+      code: normalized,
+      discount_type: type,
+      discount_value: discount,
+      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      created_by: user?.id ?? null,
+    });
+    if (error) toast.error(error.message);
+    else {
+      setCode(""); setValue(""); setExpiresAt("");
+      toast.success("Coupon created");
+      await qc.invalidateQueries({ queryKey: ["admin-coupons"] });
+    }
+  };
+
+  return <div className="space-y-5">
+    <div className="grid gap-3 rounded-xl border border-border bg-card p-5 md:grid-cols-5">
+      <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="COURSE20" />
+      <select className="h-9 rounded-md border border-input bg-background px-3 text-sm" value={type} onChange={(e) => setType(e.target.value as "percentage" | "fixed")}><option value="percentage">Percentage</option><option value="fixed">Fixed PKR</option></select>
+      <Input type="number" min="1" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Discount" />
+      <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+      <Button onClick={() => void add()}><Plus className="h-4 w-4" /> Create</Button>
+    </div>
+    <div className="grid gap-3 md:grid-cols-2">{data?.map((coupon) => <div key={coupon.id} className="rounded-xl border border-border bg-card p-4"><div className="flex items-center justify-between"><strong className="font-mono">{coupon.code}</strong><Switch checked={coupon.is_active} onCheckedChange={async (is_active) => { await supabase.from("coupons").update({ is_active }).eq("id", coupon.id); await qc.invalidateQueries({ queryKey: ["admin-coupons"] }); }} /></div><p className="mt-1 text-sm text-muted-foreground">{coupon.discount_type === "percentage" ? `${coupon.discount_value}% off` : `PKR ${coupon.discount_value} off`} · {coupon.expires_at ? `expires ${new Date(coupon.expires_at).toLocaleString()}` : "no expiry"}</p></div>)}</div>
+  </div>;
+}
+
+function StudentsTab() {
+  const listStudents = useServerFn(listAdminStudents);
+  const { data: students } = useQuery({ queryKey: ["admin-students"], queryFn: () => listStudents() });
+  const { data: progress } = useQuery({ queryKey: ["admin-student-progress"], queryFn: async () => (await supabase.from("lecture_progress").select("user_id,course_id,lecture_id,completed_at")).data ?? [] });
+  const { data: enrollments } = useQuery({ queryKey: ["admin-enrollments"], queryFn: async () => (await supabase.from("enrollments").select("user_id,status,access_expires_at,courses(title)")).data ?? [] });
+  useRealtimeQueries(["lecture_progress", "enrollments"], [["admin-student-progress"], ["admin-enrollments"]]);
+  return <div className="space-y-3">{students?.map((student) => {
+    const plans = enrollments?.filter((row) => row.user_id === student.id) ?? [];
+    const done = progress?.filter((row) => row.user_id === student.id).length ?? 0;
+    return <div key={student.id} className="rounded-xl border border-border bg-card p-4"><div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-semibold">{student.fullName || student.email || "Student"}</h3><p className="text-sm text-muted-foreground">{student.email} · {student.provider}</p></div><div className="text-right text-xs text-muted-foreground"><p>Joined {new Date(student.createdAt).toLocaleString()}</p><p>Last login {student.lastSignInAt ? new Date(student.lastSignInAt).toLocaleString() : "Not yet"}</p></div></div><p className="mt-3 text-sm">{done} lectures completed · {plans.length} course records</p><div className="mt-2 flex flex-wrap gap-2">{plans.map((plan, index) => <Badge key={`${student.id}-${index}`} variant={plan.status === "approved" ? "default" : "secondary"}>{plan.courses?.title ?? "Course"}: {plan.status}{plan.access_expires_at ? ` · until ${new Date(plan.access_expires_at).toLocaleDateString()}` : ""}</Badge>)}</div></div>;
+  })}</div>;
+}
+
+function AuditTab() {
+  const { data } = useQuery({ queryKey: ["admin-audit"], queryFn: async () => (await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200)).data ?? [] });
+  useRealtimeQueries(["audit_logs"], [["admin-audit"]]);
+  return <div className="space-y-2">{data?.map((log) => <div key={log.id} className="rounded-lg border border-border bg-card px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium capitalize">{log.action} · {log.entity_type}</p><time className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</time></div><p className="mt-1 font-mono text-xs text-muted-foreground">Record: {log.entity_id ?? "—"} · Actor: {log.actor_id ?? "system"}</p></div>)}</div>;
 }
